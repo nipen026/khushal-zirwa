@@ -93,7 +93,6 @@ export default function Footer() {
           >
             <h3
               style={{
-                fontFamily: "'Poppins', sans-serif",
                 fontWeight: 600,
                 fontSize: "18px",
                 color: "#670004",
@@ -114,7 +113,6 @@ export default function Footer() {
                     : "/faq"
                 }
                 style={{
-                  fontFamily: "'Fredoka', sans-serif",
                   fontSize: "15px",
                   color: "#000",
                   textDecoration: "none",
@@ -137,7 +135,6 @@ export default function Footer() {
           >
             <h3
               style={{
-                fontFamily: "'Poppins', sans-serif",
                 fontWeight: 600,
                 fontSize: "18px",
                 color: "#670004",
@@ -149,21 +146,21 @@ export default function Footer() {
 
             {/* Phone */}
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-              <span style={{ fontFamily: "Fredoka" }}>
+              <span >
                 +91 7829916082
               </span>
             </div>
 
             {/* Email */}
             <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-              <span style={{ fontFamily: "Fredoka" }}>
+              <span >
                 mdkaleem@zirwafoods.com
               </span>
             </div>
 
             {/* Address */}
             <div style={{ display: "flex", gap: "12px" }}>
-              <span style={{ fontFamily: "Fredoka", lineHeight: "20px" }}>
+              <span style={{ lineHeight: "20px" }}>
                 #17, 2nd floor II stage, Indiranagar, Bengaluru, Karnataka -
                 560038.
               </span>
@@ -182,7 +179,6 @@ export default function Footer() {
         {/* Copyright */}
         <p
           style={{
-            fontFamily: "'Poppins', sans-serif",
             fontWeight: 500,
             fontSize: "13px",
             color: "#670004",

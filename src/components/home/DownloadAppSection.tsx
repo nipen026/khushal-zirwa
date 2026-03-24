@@ -155,16 +155,20 @@ export default function DownloadAppSection() {
         </div>
 
         {/* Right — app mockup image */}
+        {/* Right — app mockup video */}
         <div className="flex-shrink-0 w-full lg:w-auto flex justify-center">
-          <Image
-            src="/images/mobile.png"
-            alt="Zirwa app preview"
-            width={530}
-            height={497}
-            className="w-full max-w-[400px] lg:max-w-[530px] h-auto"
-            style={{ display: "block" }}
-            priority
-          />
+          <div className="w-full max-w-[400px] lg:max-w-[530px] rounded-2xl overflow-hidden shadow-lg ">
+
+            <Image
+              src="/images/app-preview.gif"
+              alt="App Preview"
+              width={530}
+              height={497}
+              className="w-full h-auto object-cover"
+              unoptimized // ✅ important for GIF animation
+            />
+
+          </div>
         </div>
       </div>
     </section>

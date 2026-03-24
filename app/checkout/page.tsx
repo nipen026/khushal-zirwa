@@ -42,13 +42,39 @@ interface RazorpayOptions {
 declare global {
   interface Window {
     Razorpay: new (options: RazorpayOptions) => { open: () => void };
+    paypal?: {
+      Buttons: (options: {
+        createOrder: (data: unknown, actions: { order: { create: (details: { purchase_units: { amount: { currency_code: string; value: string } }[] }) => Promise<string> } }) => Promise<string>;
+        onApprove: (data: { orderID: string }, actions: { order: { capture: () => Promise<{ id: string; status: string }> } }) => Promise<void>;
+        onError: (err: unknown) => void;
+      }) => { render: (selector: string) => void };
+    };
   }
+}
+
+/* ---------------- DOMAIN DETECTION ---------------- */
+
+function getRegion(): "in" | "uk" | "other" {
+  if (typeof window === "undefined") return "other";
+  const hostname = window.location.hostname;
+  if (hostname.endsWith(".in")) return "in";
+  if (hostname.endsWith(".uk") || hostname.endsWith(".co.uk")) return "uk";
+  return "other";
+}
+
+function getCurrencySymbol(region: "in" | "uk" | "other") {
+  return region === "uk" ? "\u00a3" : "\u20b9";
+}
+
+function getCurrencyCode(region: "in" | "uk" | "other") {
+  return region === "uk" ? "GBP" : "INR";
 }
 
 export default function Checkout() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [addressId, setAddressId] = useState<string | null>(null);
+  const [region, setRegion] = useState<"in" | "uk" | "other">("other");
 
   const [scheduleType] = useState<"instant" | "schedule">(
     "instant"
@@ -59,6 +85,14 @@ export default function Checkout() {
   const [ampm] = useState<"AM" | "PM">("AM");
 
   const [paymentMethod] = useState<string>("netbanking");
+
+  const currencySymbol = getCurrencySymbol(region);
+
+  /* ---------------- REGION DETECTION ---------------- */
+
+  useEffect(() => {
+    setRegion(getRegion());
+  }, []);
 
   /* ---------------- ADDRESS ---------------- */
 
@@ -183,7 +217,7 @@ export default function Checkout() {
   }: {
     paidVia: string;
     paymentId?: string | null;
-    paymentData?: RazorpayResponse | null;
+    paymentData?: RazorpayResponse | Record<string, string> | null;
   }) => {
     const {
       data: { user },
@@ -233,7 +267,7 @@ export default function Checkout() {
     toast.success("Order placed successfully (COD)");
   };
 
-  /* ---------------- RAZORPAY ---------------- */
+  /* ---------------- RAZORPAY (.in) ---------------- */
 
   const loadRazorpay = () =>
     new Promise<boolean>((resolve) => {
@@ -277,7 +311,7 @@ export default function Checkout() {
         }
 
         await clearUserCart();
-        toast.success("Payment successful 🎉");
+        toast.success("Payment successful!");
       },
     };
 
@@ -287,9 +321,87 @@ export default function Checkout() {
     setLoading(false);
   };
 
+  /* ---------------- PAYPAL (.uk) ---------------- */
+
+  const loadPaypal = () =>
+    new Promise<boolean>((resolve) => {
+      if (window.paypal) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=GBP`;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
+  const payWithPaypal = async () => {
+    setLoading(true);
+
+    const loaded = await loadPaypal();
+
+    if (!loaded) {
+      toast.error("PayPal SDK failed to load");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+
+    // Clear any previous PayPal button
+    const container = document.getElementById("paypal-button-container");
+    if (container) container.innerHTML = "";
+
+    window.paypal!.Buttons({
+      createOrder: (_data, actions) => {
+        return actions.order.create({
+          purchase_units: [
+            {
+              amount: {
+                currency_code: "GBP",
+                value: total.toFixed(2),
+              },
+            },
+          ],
+        });
+      },
+      onApprove: async (_data, actions) => {
+        const details = await actions.order.capture();
+
+        const payload = await buildInsertOrderPayload({
+          paidVia: "paypal",
+          paymentId: details.id,
+          paymentData: { paypal_order_id: details.id, status: details.status },
+        });
+
+        const { error } = await supabase.rpc("insert_order", payload);
+
+        if (error) {
+          toast.error("Payment done but order not saved");
+          return;
+        }
+
+        await clearUserCart();
+        toast.success("Payment successful!");
+      },
+      onError: (err) => {
+        console.error("PayPal error:", err);
+        toast.error("PayPal payment failed");
+      },
+    }).render("#paypal-button-container");
+  };
+
+  /* ---------------- PLACE ORDER ---------------- */
+
   const placeOrder = () => {
-    if (paymentMethod === "cod") placeCODOrder();
-    else payWithRazorpay();
+    if (paymentMethod === "cod") {
+      placeCODOrder();
+    } else if (region === "uk") {
+      payWithPaypal();
+    } else {
+      payWithRazorpay();
+    }
   };
 
   /* ---------------- UI ---------------- */
@@ -341,7 +453,7 @@ export default function Checkout() {
               <div className="flex mt-3 justify-between w-full items-end">
                 <div>
                   <h3 className="font-medium">{item.title}</h3>
-                  <p className="font-medium text-primary mt-1">₹{item.price}</p>
+                  <p className="font-medium text-primary mt-1">{currencySymbol}{item.price}</p>
                 </div>
 
                 <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-full">
@@ -374,27 +486,39 @@ export default function Checkout() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>₹{subtotal.toFixed(2)}</span>
+              <span>{currencySymbol}{subtotal.toFixed(2)}</span>
             </div>
 
             <div className="flex justify-between">
               <span>Tax (5%)</span>
-              <span>₹{tax.toFixed(2)}</span>
+              <span>{currencySymbol}{tax.toFixed(2)}</span>
             </div>
 
             <div className="flex justify-between font-semibold text-lg">
               <span>Total</span>
-              <span>₹{total.toFixed(2)}</span>
+              <span>{currencySymbol}{total.toFixed(2)}</span>
             </div>
           </div>
+
+          {region === "uk" && (
+            <p className="text-sm text-gray-500 mt-2">Payment via PayPal</p>
+          )}
+          {region === "in" && (
+            <p className="text-sm text-gray-500 mt-2">Payment via Razorpay</p>
+          )}
 
           <button
             onClick={placeOrder}
             disabled={loading}
             className="mt-5 w-full py-3 text-white rounded-lg btn-gradient"
           >
-            {loading ? "Processing..." : "Place Order →"}
+            {loading ? "Processing..." : `Place Order \u2192`}
           </button>
+
+          {/* PayPal button renders here for .uk domains */}
+          {region === "uk" && (
+            <div id="paypal-button-container" className="mt-4" />
+          )}
         </div>
 
       </div>

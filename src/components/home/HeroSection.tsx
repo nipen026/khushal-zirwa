@@ -1,159 +1,142 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
+
+const slides = [
+  {
+    image: "/images/hero-bg-1.jpg",
+    // title: "Give Your Qurbani Where It’s Needed Most",
+    // subtitle: "Done with care, transparency and Shariah compliance.",
+  },
+  {
+    image: "/images/hero-bg-2.png",
+    title: "Fulfill Your Qurbani with Trust & Integrity",
+    subtitle: "We ensure proper sacrifice and fair distribution.",
+  },
+  {
+    image: "/images/hero-bg-3.png",
+    title: "Serve Humanity This Eid",
+    subtitle: "Your Qurbani reaches those who need it most.",
+  },
+  {
+    image: "/images/hero-bg-4.png",
+    title: "Serve Humanity This Eid",
+    subtitle: "Your Qurbani reaches those who need it most.",
+  },
+  {
+    image: "/images/hero-bg-5.png",
+    title: "Serve Humanity This Eid",
+    subtitle: "Your Qurbani reaches those who need it most.",
+  },
+];
 
 interface HeroSectionProps {
   onBookNow: () => void;
 }
 
 export default function HeroSection({ onBookNow }: HeroSectionProps) {
+  const [current, setCurrent] = useState(0);
+
+  // Auto slide
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % slides.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const prevSlide = () => {
+    setCurrent((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+  };
+
+  const nextSlide = () => {
+    setCurrent((prev) => (prev + 1) % slides.length);
+  };
 
   return (
-    <section
-      className="relative w-full flex items-center justify-center overflow-hidden"
-     style={{
-  minHeight: "100vh",
-  backgroundImage: "url('/images/hero-bg-1.jpg')",
-  backgroundPosition: "center",
-  backgroundSize: "cover",
-  backgroundRepeat: "no-repeat",
-  backgroundColor: "#2d0a0a",
-}}
-    >
-      {/* Navbar sits inside hero — scrolls away with page */}
-      <div className="absolute top-0 left-0 right-0 z-50">
+    <section className="relative w-full h-screen overflow-hidden">
+      {/* Background Slides */}
+      {slides.map((slide, index) => (
+        <div
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-1000 ${
+            index === current ? "opacity-100 z-0" : "opacity-0"
+          }`}
+          style={{
+            backgroundImage: `url(${slide.image})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+      ))}
+
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/50 z-10" />
+
+      {/* Navbar */}
+      <div className="absolute top-0 left-0 right-0 z-30">
         <Navbar />
       </div>
 
-      {/* WhatsApp button — fixed to viewport, only in hero section context */}
+      {/* WhatsApp */}
       <WhatsAppButton />
-      {/* Radial red glow — centered, matches Figma Ellipse 1233 */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
-      >
-        <div
-          style={{
-            width: "min(854px, 56.5vw)",
-            height: "min(407px, 27vw)",
-            background:
-              "radial-gradient(50% 50% at 50% 50%, rgba(237,2,19,0.4) 0%, rgba(237,2,19,0) 100%)",
-          }}
-        />
-      </div>
 
-      {/* <div
-        className="relative z-10 flex flex-col items-center text-center"
-        style={{
-          gap: "clamp(40px, 4vw, 56px)",
-          width: "min(1008px, 90vw)",
-          padding: "0 16px",
-        }}
-      > */}
-      
-        {/* <div
-          className="flex flex-col items-center w-full"
-          style={{ gap: "14px" }}
-        >
-         
-          <h1
-            className="text-white font-semibold m-0"
-            style={{
-              fontFamily: "Poppins, sans-serif",
-              fontSize: "clamp(1.8rem, 4.23vw, 63.91px)",
-              lineHeight: "clamp(2.5rem, 4.5vw, 1.25)",
-            }}
-          >
-            Outsource Your Qurbani with Complete Shariah Compliance &amp; Full
-            Transparency
-          </h1>
+      {/* Content */}
+      <div className="relative z-20 flex flex-col items-center justify-center text-center h-full px-4">
+        <h1 className="text-white font-semibold text-3xl md:text-5xl max-w-3xl leading-tight">
+          {slides[current].title}
+        </h1>
 
-    
-          <p
-            className="text-white m-0"
-            style={{
-              fontFamily: "Poppins, sans-serif",
-              fontWeight: 400,
-              fontSize: "clamp(1.1rem, 1.47vw, 22.22px)",
-              lineHeight: "1.5",
-              maxWidth: "min(900px, 93vw)",
-            }}
-          >
-            From animal selection to sacrifice and distribution among the needy
-            &mdash; we handle your Qurbani with dignity, accountability, and
-            strict adherence to Islamic principles.
-          </p>
-        </div> */}
+        <p className="text-white mt-4 text-base md:text-lg max-w-xl">
+          {slides[current].subtitle}
+        </p>
 
-        
-  {/* <button
-  type="button"
-  onClick={onBookNow}
-  className="absolute bottom-6 right-6 md:bottom-8 md:right-8 inline-flex items-center bg-white rounded-full 
-  px-4 pr-2 py-1 gap-4 md:gap-6 h-12 md:h-14 cursor-pointer"
->
-          <span
-            className="font-medium text-black whitespace-nowrap"
-            style={{
-              fontFamily: "Poppins, sans-serif",
-              fontSize: "clamp(14px,1.3vw,20px)",
-              lineHeight: "1.2",
-            }}
+        {/* CTA Button */}
+        {slides[current].title && (
+          <button
+            onClick={onBookNow}
+            className="mt-8 flex items-center gap-3 bg-white text-black px-6 py-3 rounded-full shadow-lg hover:scale-105 transition"
           >
             Book Qurbani Now
+          <span className="bg-black text-white p-2 rounded-full">
+              <FaAngleRight />
           </span>
+        </button>
+        )}
+      </div>
 
-          <span
-            className="flex items-center justify-center rounded-full bg-black flex-shrink-0"
-            style={{
-              width: "clamp(36px,3.5vw,46px)",
-              height: "clamp(36px,3.5vw,46px)",
-            }}
-          >
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 17 17"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M3.5 13.5L13.5 3.5M13.5 3.5H6.5M13.5 3.5V10.5"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-        </button> */}
-    {/* <button
-  onClick={onBookNow}
-  className="absolute bottom-6 right-6 
-  flex items-center gap-4
-  h-[60px] px-10
-  rounded-full
-  bg-gradient-to-r from-[#FFE8A3] via-[#F6C86A] to-[#E3A93D]
-  text-[#6B0F0F] font-semibold text-xl
-  shadow-lg hover:scale-105 transition"
->
-  Book Now
+      {/* Left Arrow */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-white/80 hover:bg-white p-2 rounded-full"
+      >
+        <FaAngleLeft />
+      </button>
 
-  <svg
-    className="w-5 h-5"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-  >
-    <path
-      fillRule="evenodd"
-      d="M7 5l5 5-5 5"
-      clipRule="evenodd"
-    />
-  </svg>
-</button> */}
-      {/* </div> */}
+      {/* Right Arrow */}
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-white/80 hover:bg-white p-2 rounded-full"
+      >
+        <FaAngleRight />
+      </button>
 
+      {/* Dots */}
+      <div className="absolute bottom-6 w-full flex justify-center gap-2 z-30">
+        {slides.map((_, index) => (
+          <div
+            key={index}
+            onClick={() => setCurrent(index)}
+            className={`w-3 h-3 rounded-full cursor-pointer ${
+              current === index ? "bg-white" : "bg-white/50"
+            }`}
+          />
+        ))}
+      </div>
     </section>
   );
 }
