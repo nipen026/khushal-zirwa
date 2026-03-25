@@ -6,11 +6,7 @@ import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa6";
 
 const slides = [
-  {
-    image: "/images/hero-bg-1.jpg",
-    // title: "Give Your Qurbani Where It’s Needed Most",
-    // subtitle: "Done with care, transparency and Shariah compliance.",
-  },
+
   {
     image: "/images/hero-bg-2.png",
     title: "Fulfill Your Qurbani with Trust & Integrity",
@@ -30,6 +26,11 @@ const slides = [
     image: "/images/hero-bg-5.png",
     title: "Serve Humanity This Eid",
     subtitle: "Your Qurbani reaches those who need it most.",
+  },
+    {
+    image: "/images/bg-hero-6.png",
+    // title: "Give Your Qurbani Where It’s Needed Most",
+    // subtitle: "Done with care, transparency and Shariah compliance.",
   },
 ];
 
@@ -124,6 +125,28 @@ export default function HeroSection({ onBookNow }: HeroSectionProps) {
       >
         <FaAngleRight />
       </button>
+
+      {/* Gold CTA — bottom-right on last slide */}
+      {current === 4 && (
+        <button
+          onClick={onBookNow}
+          className="absolute bottom-20 right-6 sm:right-12 z-30 flex items-center gap-3 px-7 py-3.5 rounded-full shadow-lg hover:scale-105 transition"
+          style={{
+            background: "linear-gradient(135deg, #D4A843 0%, #F5D77A 40%, #C8952E 100%)",
+            color: "#FFFFFF",
+            fontFamily: "Fredoka, sans-serif",
+            fontWeight: 600,
+            fontSize: "18px",
+            letterSpacing: "0.3px",
+            boxShadow: "0 4px 20px rgba(196, 155, 50, 0.5)",
+          }}
+        >
+          Book Qurbani Now
+          <span className="bg-white/20 p-2 rounded-full">
+            <FaAngleRight />
+          </span>
+        </button>
+      )}
 
       {/* Dots */}
       <div className="absolute bottom-6 w-full flex justify-center gap-2 z-30">
